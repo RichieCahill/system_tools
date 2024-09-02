@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "system_tools"
+version = "0.1.0"
+description = ""
+authors = ["Richie Cahill <richie@tmmworkshop.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "system_tools" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+apscheduler = "*"
+polars = "*"
+requests = "*"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+pytest-xdist = "*"
+ruff = "*"
+types-requests = "*"
+
+[tool.poetry.scripts]
+snapshot_manager = "system_tools.snapshot_manager:main"
+sync_mirror = "system_tools.arch_mirror:main"
+validate_jeeves = "system_tools.validate_jeeves:main"
+validate_jeevesjr = "system_tools.validate_jeevesjr:main"
+validate_palatine_hill = "system_tools.validate_palatine_hill:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+lint.select = ["ALL"]
+target-version = "py312"
+
+line-length = 120
+
+lint.ignore = [
+    "ANN101", # (PERM) This rule is deprecated
+    "ANN102", # (PERM) This rule is deprecated
+    "G004",   # (PERM) This is a performers nit
+    "COM812", # (TEMP) conflicts when used with the formatter
+    "ISC001", # (TEMP) conflicts when used with the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+
+"tests/**" = [
+    "S101", # (perm) pytest needs asserts
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["id"]
+
+[tool.ruff.lint.pylint]
+max-args = 9
+
+[tool.coverage.run]
+source = ["system_tools"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == \"__main__\":",
+]
+
+[tool.pytest.ini_options]
+addopts = "-n auto -ra"
+# --cov=system_tools --cov-report=term-missing --cov-report=xml --cov-report=html --cov-branch
