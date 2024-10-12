@@ -20,16 +20,12 @@ def main() -> None:
 
         services = (
             "docker-arch_mirror",
-            "docker-bazarr",
             "docker-cloud_flare_tunnel",
-            "docker-dnd_file_server",
             "docker-filebrowser",
             "docker-grafana",
             "docker-haproxy",
-            "docker-prowlarr",
             "docker-qbit",
             "docker-qbitvpn",
-            "docker-radarr",
             "docker-sonarr",
             "docker-uptime_kuma",
             "docker",
