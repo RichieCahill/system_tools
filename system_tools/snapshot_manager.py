@@ -92,6 +92,11 @@ def main() -> None:
 
     time_stamp = get_time_stamp()
 
+    default_config = config_data.get(
+        "default",
+        {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
+    )
+
     for dataset in zfs_list():
         dataset_name = dataset.name
         status = dataset.create_snapshot(time_stamp)
@@ -100,11 +105,6 @@ def main() -> None:
             msg = f"{dataset_name} failed to create snapshot {time_stamp}"
             logging.error(msg)
             continue
-
-        default_config = config_data.get(
-            "default",
-            {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
-        )
 
         count_lookup = config_data.get(dataset_name, default_config)
 
