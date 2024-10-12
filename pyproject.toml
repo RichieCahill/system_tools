@@ -27,7 +27,6 @@ snapshot_manager = "system_tools.snapshot_manager:main"
 sync_mirror = "system_tools.arch_mirror:main"
 validate_jeeves = "system_tools.validate_jeeves:main"
 validate_jeevesjr = "system_tools.validate_jeevesjr:main"
-validate_palatine_hill = "system_tools.validate_palatine_hill:main"
 
 [build-system]
 requires = ["poetry-core"]
