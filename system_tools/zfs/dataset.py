@@ -240,3 +240,18 @@ class Dataset:
             f"{self.written=}\n"
             f"{self.xattr=}\n"
         )
+
+
+def zfs_list() -> list[Dataset]:
+    """Get zfs list.
+
+    Returns:
+        list[Dataset]: A list of zfs datasets.
+    """
+    logging.info("Getting zfs list")
+
+    raw_datasets, _ = bash_wrapper("zfs list -t filesystem")
+
+    cleaned_datasets = raw_datasets.strip().split("\n")
+
+    return [Dataset(raw_dataset) for raw_dataset in cleaned_datasets if "/" in raw_dataset]

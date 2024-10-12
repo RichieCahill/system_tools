@@ -10,7 +10,7 @@ from re import search
 from tomllib import load as toml_load
 
 from system_tools.common import configure_logger
-from system_tools.zfs import Dataset
+from system_tools.zfs import Dataset, zfs_list
 
 
 def load_config_data(config_file: str) -> dict[str, dict[str, int]]:
@@ -69,6 +69,13 @@ def get_snapshots_to_delete(
             dataset.delete_snapshot(snapshot)
 
 
+def get_time_stamp() -> str:
+    """Get the time stamp."""
+    now = datetime.now(tz=UTC)
+    nearest_15_min = now.replace(minute=(now.minute - (now.minute % 15)))
+    return nearest_15_min.strftime("auto_%Y%m%d%H%M")
+
+
 def main() -> None:
     """Main."""
     configure_logger(level="DEBUG")
@@ -78,22 +85,28 @@ def main() -> None:
     parser.add_argument("--config-file", help="Path to the config file", default="config.toml", type=Path)
     args = parser.parse_args()
 
-    config_data = load_config_data(args.config_file)
+    config_data = {}
+    if args.config_file.exists():
+        config_data = load_config_data(args.config_file)
     logging.debug(f"{config_data=}")
 
-    now = datetime.now(tz=UTC)
-    nearest_15_min = now.replace(minute=(now.minute - (now.minute % 15)))
-    time_stamp = nearest_15_min.strftime("auto_%Y%m%d%H%M")
+    time_stamp = get_time_stamp()
 
-    for dataset_name, count_lookup in config_data.items():
-        dataset = Dataset(dataset_name)
-
+    for dataset in zfs_list():
+        dataset_name = dataset.name
         status = dataset.create_snapshot(time_stamp)
         logging.debug(f"{status=}")
         if status != "snapshot created":
             msg = f"{dataset_name} failed to create snapshot {time_stamp}"
             logging.error(msg)
             continue
+
+        default_config = config_data.get(
+            "default",
+            {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
+        )
+
+        count_lookup = config_data.get(dataset_name, default_config)
 
         get_snapshots_to_delete(dataset, count_lookup)
 
