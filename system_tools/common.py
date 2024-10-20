@@ -31,6 +31,7 @@ def bash_wrapper(command: str) -> tuple[str, int]:
     """
     # This is a acceptable risk
     process = Popen(command.split(), stdout=PIPE, stderr=PIPE)  # noqa: S603
-    output, _ = process.communicate()
+    output, error = process.communicate()
+    logging.error(f"{error=}")
 
     return output.decode(), process.returncode

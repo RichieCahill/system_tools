@@ -42,26 +42,21 @@ def get_snapshots_to_delete(
         logging.info(f"{dataset.name} has no snapshots")
         return
 
-    snapshots_names = {snapshot.name for snapshot in snapshots}
-
     filters = (
-        ("15_min", re_compile(r"auto_\d{10}(?:15|30|45)"), 6),
-        ("hourly", re_compile(r"auto_\d{8}(?!00)\d{2}00"), 24),
-        ("daily", re_compile(r"auto_\d{6}(?!01)\d{2}0000"), 31),
-        ("monthly", re_compile(r"auto_\d{6}010000"), 12),
+        ("15_min", re_compile(r"auto_\d{10}(?:15|30|45)")),
+        ("hourly", re_compile(r"auto_\d{8}(?!00)\d{2}00")),
+        ("daily", re_compile(r"auto_\d{6}(?!01)\d{2}0000")),
+        ("monthly", re_compile(r"auto_\d{6}010000")),
     )
 
-    for filter_name, snapshot_filter, default in filters:
-        logging.debug(f"{filter_name=}\n{snapshot_filter=}\n{default=}")
+    for filter_name, snapshot_filter in filters:
+        logging.debug(f"{filter_name=}\n{snapshot_filter=}")
 
-        filtered_snapshots = [
-            snapshots_name for snapshots_name in snapshots_names if search(snapshot_filter, snapshots_name)
-        ]
-        filtered_snapshots.sort()
+        filtered_snapshots = sorted(snapshot.name for snapshot in snapshots if search(snapshot_filter, snapshot.name))
 
         logging.debug(f"{filtered_snapshots=}")
 
-        snapshots_wanted = count_lookup.get(filter_name, default)
+        snapshots_wanted = count_lookup[filter_name]
         snapshots_being_deleted = filtered_snapshots[:-snapshots_wanted] if snapshots_wanted > 0 else filtered_snapshots
 
         logging.info(f"{snapshots_being_deleted} are being deleted")

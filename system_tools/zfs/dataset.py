@@ -18,7 +18,7 @@ class Snapshot:
         self.creation = datetime.fromtimestamp(int(snapshot_data["creation"]), tz=UTC)
         self.defer_destroy = snapshot_data["defer_destroy"]
         self.guid = int(snapshot_data["guid"])
-        self.name = snapshot_data["name"]
+        self.name = snapshot_data["name"].split("@")[0]
         self.objsetid = int(snapshot_data["objsetid"])
         self.ratio = snapshot_data["ratio"]
         self.refer = int(snapshot_data["refer"])
@@ -154,7 +154,7 @@ class Dataset:
             "written",
         )
 
-        raw_snapshots, _ = bash_wrapper(f"zfs list -t snapshot -pH -o {','.join(options)}")
+        raw_snapshots, _ = bash_wrapper(f"zfs list -t snapshot -pH {self.name} -o {','.join(options)}")
 
         if raw_snapshots == "":
             return None
@@ -188,7 +188,10 @@ class Dataset:
             snapshot_name (str): a snapshot name
         """
         logging.debug(f"deleting {self.name}@{snapshot_name}")
-        bash_wrapper(f"zfs destroy {self.name}@{snapshot_name}")
+        _, return_code = bash_wrapper(f"zfs destroy {self.name}@{snapshot_name}")
+        if return_code != 0:
+            error = f"Failed to delete snapshot {snapshot_name=} for {self.name}"
+            raise RuntimeError(error)
 
     def __repr__(self) -> str:
         """__repr__."""
