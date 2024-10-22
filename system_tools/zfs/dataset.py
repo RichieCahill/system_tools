@@ -86,9 +86,9 @@ class Dataset:
             "xattr",
         )
 
-        raw_dataset_data, _ = bash_wrapper(f"zfs list {name} -pH -o {','.join(options)}")
+        dataset_data_name, _ = bash_wrapper(f"zfs list {name} -pH -o {','.join(options)}")
 
-        dataset_data = {option: raw_dataset_data.strip().split("\t")[index] for index, option in enumerate(options)}
+        dataset_data = {option: dataset_data_name.strip().split("\t")[index] for index, option in enumerate(options)}
 
         self.aclinherit = dataset_data["aclinherit"]
         self.aclmode = dataset_data["aclmode"]
@@ -245,7 +245,7 @@ class Dataset:
         )
 
 
-def zfs_list() -> list[Dataset]:
+def get_datasets() -> list[Dataset]:
     """Get zfs list.
 
     Returns:
@@ -253,8 +253,8 @@ def zfs_list() -> list[Dataset]:
     """
     logging.info("Getting zfs list")
 
-    raw_datasets, _ = bash_wrapper("zfs list -t filesystem")
+    dataset_names, _ = bash_wrapper("zfs list -Hp -t filesystem -o name")
 
-    cleaned_datasets = raw_datasets.strip().split("\n")
+    cleaned_datasets = dataset_names.strip().split("\n")
 
-    return [Dataset(raw_dataset) for raw_dataset in cleaned_datasets if "/" in raw_dataset]
+    return [Dataset(dataset_name) for dataset_name in cleaned_datasets if "/" in dataset_name]

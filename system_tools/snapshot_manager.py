@@ -10,7 +10,7 @@ from re import search
 from tomllib import load as toml_load
 
 from system_tools.common import configure_logger
-from system_tools.zfs import Dataset, zfs_list
+from system_tools.zfs import Dataset, get_datasets
 
 
 def load_config_data(config_file: str) -> dict[str, dict[str, int]]:
@@ -92,7 +92,7 @@ def main() -> None:
         {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
     )
 
-    for dataset in zfs_list():
+    for dataset in get_datasets():
         dataset_name = dataset.name
         status = dataset.create_snapshot(time_stamp)
         logging.debug(f"{status=}")
