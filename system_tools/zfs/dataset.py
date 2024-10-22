@@ -18,7 +18,7 @@ class Snapshot:
         self.creation = datetime.fromtimestamp(int(snapshot_data["creation"]), tz=UTC)
         self.defer_destroy = snapshot_data["defer_destroy"]
         self.guid = int(snapshot_data["guid"])
-        self.name = snapshot_data["name"].split("@")[0]
+        self.name = snapshot_data["name"].split("@")[1]
         self.objsetid = int(snapshot_data["objsetid"])
         self.ratio = snapshot_data["ratio"]
         self.refer = int(snapshot_data["refer"])
