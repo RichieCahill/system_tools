@@ -26,7 +26,6 @@ def main() -> None:
             "docker-haproxy",
             "docker-qbit",
             "docker-qbitvpn",
-            "docker-sonarr",
             "docker-uptime_kuma",
             "docker",
             "plex",
