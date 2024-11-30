@@ -6,6 +6,6 @@ from system_tools.zfs.zpool import Zpool
 __all__ = [
     "Dataset",
     "Snapshot",
-    "get_datasets",
     "Zpool",
+    "get_datasets",
 ]

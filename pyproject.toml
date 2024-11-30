@@ -39,8 +39,6 @@ target-version = "py312"
 line-length = 120
 
 lint.ignore = [
-    "ANN101", # (PERM) This rule is deprecated
-    "ANN102", # (PERM) This rule is deprecated
     "G004",   # (PERM) This is a performers nit
     "COM812", # (TEMP) conflicts when used with the formatter
     "ISC001", # (TEMP) conflicts when used with the formatter
