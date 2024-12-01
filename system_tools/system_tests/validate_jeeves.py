@@ -5,7 +5,7 @@ import sys
 from os import environ
 
 from system_tools.common import configure_logger
-from system_tools.components import discord_notification, systemd_tests, zpool_tests
+from system_tools.system_tests.components import discord_notification, systemd_tests, zpool_tests
 
 
 def main() -> None:
