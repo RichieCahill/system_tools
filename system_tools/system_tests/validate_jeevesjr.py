@@ -19,11 +19,9 @@ def main() -> None:
             errors.extend(zpool_errors)
 
         services = (
-            "docker-arch_mirror",
             "docker-cloud_flare_tunnel",
             "docker-haproxy",
             "docker-uptime_kuma",
-            "sync_mirror",
         )
 
         if systemd_errors := systemd_tests(services):
