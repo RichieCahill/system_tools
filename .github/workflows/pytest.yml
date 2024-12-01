@@ -28,30 +28,7 @@ jobs:
       - name: Run image
         uses: abatilo/actions-poetry@v2
         with:
-          poetry-version: "1.8.2"
-
-      - name: Install the project dependencies
-        run: poetry install
-      - name: Run the automated tests (for example)
-        run: poetry run pytest -v
-
-  test-arm64:
-    name: test-arm64
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Run image
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: "1.8.2"
+          poetry-version: 1.8.4
 
       - name: Install the project dependencies
         run: poetry install
