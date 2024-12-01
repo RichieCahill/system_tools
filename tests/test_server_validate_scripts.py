@@ -3,13 +3,13 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from system_tools import validate_jeeves, validate_jeevesjr
+from system_tools.system_tests import validate_jeeves, validate_jeevesjr
 
 
 class TestJeeves:
     """Jeeves."""
 
-    script_path = "system_tools.validate_jeeves"
+    script_path = "system_tools.system_tests.validate_jeeves"
 
     def test_validate_jeeves(self, mocker: MockerFixture) -> None:
         """test_validate_jeeves."""
@@ -50,7 +50,7 @@ class TestJeeves:
 class TestJeevesjr:
     """Jeevesjr."""
 
-    script_path = "system_tools.validate_jeevesjr"
+    script_path = "system_tools.system_tests.validate_jeevesjr"
 
     def test_validate_jeevesjr(self, mocker: MockerFixture) -> None:
         """test_validate_jeevesjr."""

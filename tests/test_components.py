@@ -4,10 +4,12 @@ from os import environ
 
 from pytest_mock import MockerFixture
 
-from system_tools.components import discord_notification, systemd_tests, zpool_tests
+from system_tools.system_tests.components import discord_notification, systemd_tests, zpool_tests
 from system_tools.zfs import Zpool
 
 temp = "Every feature flags pool has all supported and requested features enabled.\n"
+
+SYSTEM_TESTS_COMPONENTS = "system_tools.system_tests.components"
 
 
 def test_zpool_tests(mocker: MockerFixture) -> None:
@@ -16,8 +18,8 @@ def test_zpool_tests(mocker: MockerFixture) -> None:
     mock_zpool.health = "ONLINE"
     mock_zpool.capacity = 70
     mock_zpool.name = "Main"
-    mocker.patch("system_tools.components.Zpool", return_value=mock_zpool)
-    mocker.patch("system_tools.components.bash_wrapper", return_value=(temp, ""))
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.Zpool", return_value=mock_zpool)
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=(temp, ""))
     errors = zpool_tests(("Main",))
     assert errors == []
 
@@ -28,8 +30,8 @@ def test_zpool_tests_out_of_date(mocker: MockerFixture) -> None:
     mock_zpool.health = "ONLINE"
     mock_zpool.capacity = 70
     mock_zpool.name = "Main"
-    mocker.patch("system_tools.components.Zpool", return_value=mock_zpool)
-    mocker.patch("system_tools.components.bash_wrapper", return_value=("", ""))
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.Zpool", return_value=mock_zpool)
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=("", ""))
     errors = zpool_tests(("Main",))
     assert errors == ["ZPool out of date"]
 
@@ -40,8 +42,8 @@ def test_zpool_tests_out_of_space(mocker: MockerFixture) -> None:
     mock_zpool.health = "ONLINE"
     mock_zpool.capacity = 100
     mock_zpool.name = "Main"
-    mocker.patch("system_tools.components.Zpool", return_value=mock_zpool)
-    mocker.patch("system_tools.components.bash_wrapper", return_value=(temp, ""))
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.Zpool", return_value=mock_zpool)
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=(temp, ""))
     errors = zpool_tests(("Main",))
     assert errors == ["Main is low on space"]
 
@@ -52,8 +54,8 @@ def test_zpool_tests_offline(mocker: MockerFixture) -> None:
     mock_zpool.health = "OFFLINE"
     mock_zpool.capacity = 70
     mock_zpool.name = "Main"
-    mocker.patch("system_tools.components.Zpool", return_value=mock_zpool)
-    mocker.patch("system_tools.components.bash_wrapper", return_value=(temp, ""))
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.Zpool", return_value=mock_zpool)
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=(temp, ""))
     errors = zpool_tests(("Main",))
     assert errors == ["Main is OFFLINE"]
 
@@ -73,7 +75,7 @@ def test_systemd_tests_multiple_negative_retries() -> None:
 def test_systemd_tests_multiple_pass(mocker: MockerFixture) -> None:
     """test_systemd_tests_fail."""
     mocker.patch(
-        "system_tools.components.bash_wrapper",
+        f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper",
         side_effect=[
             ("inactive\n", ""),
             ("activating\n", ""),
@@ -90,7 +92,7 @@ def test_systemd_tests_multiple_pass(mocker: MockerFixture) -> None:
 
 def test_systemd_tests_fail(mocker: MockerFixture) -> None:
     """test_systemd_tests_fail."""
-    mocker.patch("system_tools.components.bash_wrapper", return_value=("inactive\n", ""))
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=("inactive\n", ""))
     errors = systemd_tests(("docker",), max_retries=5)
     assert errors == ["docker is inactive"]
 
@@ -98,5 +100,5 @@ def test_systemd_tests_fail(mocker: MockerFixture) -> None:
 def test_discord_notification(mocker: MockerFixture) -> None:
     """test_discord_notification."""
     environ["WEBHOOK_URL"] = "https://discord.com/api/webhooks/test"
-    mocker.patch("system_tools.components.post", return_value=None)
+    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.post", return_value=None)
     discord_notification("username", ["error1", "error2"])
