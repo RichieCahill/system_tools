@@ -23,8 +23,8 @@ ruff = "*"
 types-requests = "*"
 
 [tool.poetry.scripts]
-snapshot_manager = "system_tools.snapshot_manager:main"
-sync_mirror = "system_tools.arch_mirror:main"
+snapshot_manager = "system_tools.tools.snapshot_manager:main"
+sync_mirror = "system_tools.tools.arch_mirror:main"
 validate_jeeves = "system_tools.validate_jeeves:main"
 validate_jeevesjr = "system_tools.validate_jeevesjr:main"
 
