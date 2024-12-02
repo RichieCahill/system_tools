@@ -26,10 +26,7 @@ def load_config_data(config_file: str) -> dict[str, dict[str, int]]:
         return toml_load(file)
 
 
-def get_snapshots_to_delete(
-    dataset: Dataset,
-    count_lookup: dict[str, int],
-) -> None:
+def delete_snapshots(dataset: Dataset, count_lookup: dict[str, int]) -> None:
     """Get snapshots to delete.
 
     Args:
@@ -103,7 +100,7 @@ def main() -> None:
 
         count_lookup = config_data.get(dataset_name, default_config)
 
-        get_snapshots_to_delete(dataset, count_lookup)
+        delete_snapshots(dataset, count_lookup)
 
     logging.info("snapshot_manager completed")
 

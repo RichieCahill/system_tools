@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, call
 
 from pytest_mock import MockerFixture
 
-from system_tools.tools.snapshot_manager import get_snapshots_to_delete, main
+from system_tools.tools.snapshot_manager import delete_snapshots, main
 from system_tools.zfs import Dataset, Snapshot
 
 SNAPSHOT_MANAGER = "system_tools.tools.snapshot_manager"
@@ -29,8 +29,8 @@ def create_mock_dataset(
     return mock_dataset
 
 
-def test_get_snapshots_to_delete() -> None:
-    """test_get_snapshots_to_delete."""
+def test_delete_snapshots() -> None:
+    """test_delete_snapshots."""
     mock_dataset = create_mock_dataset()
     mock_dataset.get_snapshots.return_value = [
         create_mock_snapshot(name="auto_202401010000"),
@@ -51,7 +51,7 @@ def test_get_snapshots_to_delete() -> None:
         create_mock_snapshot(name="auto_202401050000"),
     ]
 
-    get_snapshots_to_delete(mock_dataset, {"15_min": 2, "hourly": 1, "daily": 1, "monthly": 1})
+    delete_snapshots(mock_dataset, {"15_min": 2, "hourly": 1, "daily": 1, "monthly": 1})
 
     calls = (
         call("auto_202401010015"),
@@ -69,14 +69,14 @@ def test_get_snapshots_to_delete() -> None:
     mock_dataset.delete_snapshot.assert_has_calls(calls, any_order=True)
 
 
-def test_get_snapshots_to_delete_no_snapshots() -> None:
-    """test_get_snapshots_to_delete."""
+def test_delete_snapshots_no_snapshots() -> None:
+    """test_delete_snapshots."""
     mock_dataset = MagicMock(spec=Dataset)
     mock_dataset.name = "test_dataset"
 
     mock_dataset.get_snapshots.return_value = []
 
-    get_snapshots_to_delete(mock_dataset, {"15_min": 2, "hourly": 0, "daily": 0, "monthly": 0})
+    delete_snapshots(mock_dataset, {"15_min": 2, "hourly": 0, "daily": 0, "monthly": 0})
 
     mock_dataset.delete_snapshot.assert_not_called()
 
@@ -93,14 +93,14 @@ def test_main(mocker: MockerFixture) -> None:
 
     mock_datetime_now(mocker, datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC))
 
-    mock_get_snapshots_to_delete = mocker.patch(f"{SNAPSHOT_MANAGER}.get_snapshots_to_delete")
+    mock_delete_snapshots = mocker.patch(f"{SNAPSHOT_MANAGER}.delete_snapshots")
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_time_stamp", return_value="auto_202401010000")
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_datasets", return_value=[mock_dataset])
 
     main()
 
     mock_dataset.create_snapshot.assert_called_once_with("auto_202401010000")
-    mock_get_snapshots_to_delete.assert_called_once_with(
+    mock_delete_snapshots.assert_called_once_with(
         mock_dataset,
         {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
     )
@@ -112,11 +112,11 @@ def test_main_fault(mocker: MockerFixture) -> None:
 
     mock_datetime_now(mocker, datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC))
 
-    mock_get_snapshots_to_delete = mocker.patch(f"{SNAPSHOT_MANAGER}.get_snapshots_to_delete")
-    mocker.patch(f"{SNAPSHOT_MANAGER}.get_snapshots_to_delete")
+    mock_delete_snapshots = mocker.patch(f"{SNAPSHOT_MANAGER}.delete_snapshots")
+    mocker.patch(f"{SNAPSHOT_MANAGER}.delete_snapshots")
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_datasets", return_value=[mock_dataset])
 
     main()
 
     mock_dataset.create_snapshot.assert_called_once_with("auto_202401010000")
-    mock_get_snapshots_to_delete.assert_not_called()
+    mock_delete_snapshots.assert_not_called()
