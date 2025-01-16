@@ -6,7 +6,6 @@ from concurrent.futures import Executor
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from pytest_mock import MockerFixture
 
 from system_tools.common import parallelize_process, parallelize_thread
 from system_tools.common.parallelize import _parallelize_base
@@ -14,27 +13,36 @@ from system_tools.common.parallelize import _parallelize_base
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from pytest_mock import MockerFixture
+
 
 class MockFuture:
-    def __init__(self, result: Any):
+    """MockFuture."""
+
+    def __init__(self, result: Any) -> None:  # noqa: ANN401
+        """Init."""
         self._result = result
         self._exception: Exception | None = None
 
     def exception(self) -> Exception | None:
+        """Exception."""
         return self._exception
 
-    def result(self) -> Any:
+    def result(self) -> Any:  # noqa: ANN401
+        """Result."""
         return self._result
 
 
 class MockPoolExecutor(Executor):
+    """MockPoolExecutor."""
+
     def __init__(
         self,
         max_workers: int | None = None,
         thread_name_prefix: str = "",
         initializer: Callable[..., None] | None = None,
         initargs: tuple[Any, ...] = (),
-    ):
+    ) -> None:
         """Initializes a new ThreadPoolExecutor instance.
 
         Args:
@@ -49,7 +57,7 @@ class MockPoolExecutor(Executor):
         self._initializer = initializer
         self._initargs = initargs
 
-    def submit(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> MockFuture:
+    def submit(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> MockFuture:  # noqa: ANN401
         """Submits a callable to be executed with the given arguments.
 
         Schedules the callable to be executed as fn(*args, **kwargs) and returns
