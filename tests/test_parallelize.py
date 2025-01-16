@@ -1,9 +1,71 @@
 """test_executors."""
 
+from __future__ import annotations
+
+from concurrent.futures import Executor
+from typing import TYPE_CHECKING, Any
+
 import pytest
 from pytest_mock import MockerFixture
 
 from system_tools.common import parallelize_process, parallelize_thread
+from system_tools.common.parallelize import _parallelize_base
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+
+class MockFuture:
+    def __init__(self, result: Any):
+        self._result = result
+        self._exception: Exception | None = None
+
+    def exception(self) -> Exception | None:
+        return self._exception
+
+    def result(self) -> Any:
+        return self._result
+
+
+class MockPoolExecutor(Executor):
+    def __init__(
+        self,
+        max_workers: int | None = None,
+        thread_name_prefix: str = "",
+        initializer: Callable[..., None] | None = None,
+        initargs: tuple[Any, ...] = (),
+    ):
+        """Initializes a new ThreadPoolExecutor instance.
+
+        Args:
+            max_workers: The maximum number of threads that can be used to
+                execute the given calls.
+            thread_name_prefix: An optional name prefix to give our threads.
+            initializer: A callable used to initialize worker threads.
+            initargs: A tuple of arguments to pass to the initializer.
+        """
+        self._max_workers = max_workers
+        self._thread_name_prefix = thread_name_prefix
+        self._initializer = initializer
+        self._initargs = initargs
+
+    def submit(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> MockFuture:
+        """Submits a callable to be executed with the given arguments.
+
+        Schedules the callable to be executed as fn(*args, **kwargs) and returns
+        a Future instance representing the execution of the callable.
+
+        Args:
+            fn: The callable to execute.
+            *args: The positional arguments to pass to the callable.
+            **kwargs: The keyword arguments to pass to the callable.
+
+        Returns:
+            A Future instance representing the execution of the callable.
+        """
+        result = fn(*args, **kwargs)
+
+        return MockFuture(result)
 
 
 def add(a: int, b: int) -> int:
@@ -55,3 +117,16 @@ def test_early_error() -> None:
     kwargs_list: list[dict[str, int | None]] = [{"a": 1, "b": 2}, {"a": 3, "b": None}]
     with pytest.raises(TypeError, match=r"unsupported operand type\(s\) for \+\: 'int' and 'NoneType'"):
         parallelize_thread(func=add, kwargs_list=kwargs_list, mode="early_error")
+
+
+def test_mock_pool_executor() -> None:
+    """test_mock_pool_executor."""
+    results = _parallelize_base(
+        executor_type=MockPoolExecutor,
+        func=add,
+        kwargs_list=[{"a": 1, "b": 2}, {"a": 3, "b": 4}],
+        max_workers=None,
+        progress_tracker=None,
+        mode="normal",
+    )
+    assert repr(results) == "results=[3, 7] exceptions=[]"
