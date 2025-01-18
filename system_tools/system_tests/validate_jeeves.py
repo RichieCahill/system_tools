@@ -36,7 +36,7 @@ def main() -> None:
         errors.append(f"Jeeves validation failed: {error}")
 
     if errors:
-        logging.error(f"Jeeves validation failed: \n{"\n".join(errors)}")
+        logging.error(f"Jeeves validation failed: \n{'\n'.join(errors)}")
         discord_notification("jeeves", errors)
 
         sys.exit(1)
