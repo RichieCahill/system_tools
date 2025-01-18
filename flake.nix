@@ -48,6 +48,7 @@
             _: prev: lib.genAttrs [
               "ruff"
               "polars"
+              "mypy"
             ] (package: prev.${package}.override { preferWheel = true; })
           );
         };
