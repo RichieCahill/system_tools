@@ -66,10 +66,7 @@
           ).env.overrideAttrs
             (old: {
               buildInputs = with pkgs; [
-                poetry
-                just
-                python312Packages.pudb
-                mypy
+                (poetry.override { python3 = python312; })
               ];
             });
 
