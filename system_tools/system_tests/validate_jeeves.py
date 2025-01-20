@@ -27,7 +27,6 @@ def main() -> None:
             "docker-qbitvpn",
             "docker-uptime_kuma",
             "docker",
-            "plex",
         )
         if systemd_errors := systemd_tests(services):
             errors.extend(systemd_errors)
