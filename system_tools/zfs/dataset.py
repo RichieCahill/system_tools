@@ -1,35 +1,53 @@
 """dataset."""
 
+from __future__ import annotations
+
+import json
 import logging
-from collections.abc import Sequence
 from datetime import UTC, datetime
+from typing import Any
 
 from system_tools.common import bash_wrapper
+
+
+def _zfs_list(zfs_list: str) -> dict[str, Any]:
+    """Check the version of zfs."""
+    raw_zfs_list_data, _ = bash_wrapper(zfs_list)
+
+    zfs_list_data = json.loads(raw_zfs_list_data)
+
+    vers_major = zfs_list_data["output_version"]["vers_major"]
+    vers_minor = zfs_list_data["output_version"]["vers_minor"]
+    command = zfs_list_data["output_version"]["command"]
+
+    if vers_major != 0 or vers_minor != 1 or command != "zfs list":
+        error = f"Datasets are not in the correct format {vers_major=} {vers_minor=} {command=}"
+        raise RuntimeError(error)
+
+    return zfs_list_data
 
 
 class Snapshot:
     """Snapshot."""
 
-    def __init__(self, data: str, options: Sequence[str]) -> None:
+    def __init__(self, snapshot_data: dict[str, Any]) -> None:
         """__init__."""
-        snapshot_data = {option: data.split("\t")[index] for index, option in enumerate(options)}
-
+        properties = snapshot_data["properties"]
         self.createtxg = int(snapshot_data["createtxg"])
-        self.creation = datetime.fromtimestamp(int(snapshot_data["creation"]), tz=UTC)
-        self.defer_destroy = snapshot_data["defer_destroy"]
-        self.guid = int(snapshot_data["guid"])
+        self.creation = datetime.fromtimestamp(int(properties["creation"]["value"]), tz=UTC)
+        self.defer_destroy = properties["defer_destroy"]["value"]
+        self.guid = int(properties["guid"]["value"])
         self.name = snapshot_data["name"].split("@")[1]
-        self.objsetid = int(snapshot_data["objsetid"])
-        self.ratio = snapshot_data["ratio"]
-        self.refer = int(snapshot_data["refer"])
-        self.used = int(snapshot_data["used"])
-        self.userrefs = int(snapshot_data["userrefs"])
-        self.version = int(snapshot_data["version"])
-        self.written = int(snapshot_data["written"])
+        self.objsetid = int(properties["objsetid"]["value"])
+        self.referenced = int(properties["referenced"]["value"])
+        self.used = int(properties["used"]["value"])
+        self.userrefs = int(properties["userrefs"]["value"])
+        self.version = int(properties["version"]["value"])
+        self.written = int(properties["written"]["value"])
 
     def __repr__(self) -> str:
         """__repr__."""
-        return f"name={self.name} used={self.used} refer={self.refer}"
+        return f"name={self.name} used={self.used} refer={self.referenced}"
 
 
 class Dataset:
@@ -37,129 +55,62 @@ class Dataset:
 
     def __init__(self, name: str) -> None:
         """__init__."""
-        options = (
-            "aclinherit",
-            "aclmode",
-            "acltype",
-            "available",
-            "canmount",
-            "checksum",
-            "clones",
-            "compression",
-            "copies",
-            "createtxg",
-            "creation",
-            "dedup",
-            "devices",
-            "encryption",
-            "exec",
-            "filesystem_limit",
-            "guid",
-            "keystatus",
-            "logbias",
-            "mlslabel",
-            "mounted",
-            "mountpoint",
-            "name",
-            "quota",
-            "readonly",
-            "recordsize",
-            "redundant_metadata",
-            "referenced",
-            "refquota",
-            "refreservation",
-            "reservation",
-            "setuid",
-            "sharenfs",
-            "snapdir",
-            "snapshot_limit",
-            "sync",
-            "used",
-            "usedbychildren",
-            "usedbydataset",
-            "usedbysnapshots",
-            "version",
-            "volmode",
-            "volsize",
-            "vscan",
-            "written",
-            "xattr",
-        )
+        dataset_data = _zfs_list(f"zfs list {name} -pHj -o all")
 
-        dataset_data_name, _ = bash_wrapper(f"zfs list {name} -pH -o {','.join(options)}")
+        properties = dataset_data["datasets"][name]["properties"]
 
-        dataset_data = {option: dataset_data_name.strip().split("\t")[index] for index, option in enumerate(options)}
-
-        self.aclinherit = dataset_data["aclinherit"]
-        self.aclmode = dataset_data["aclmode"]
-        self.acltype = dataset_data["acltype"]
-        self.available = int(dataset_data["available"])
-        self.canmount = dataset_data["canmount"]
-        self.checksum = dataset_data["checksum"]
-        self.clones = dataset_data["clones"]
-        self.compression = dataset_data["compression"]
-        self.copies = int(dataset_data["copies"])
-        self.createtxg = int(dataset_data["createtxg"])
-        self.creation = datetime.fromtimestamp(int(dataset_data["creation"]), tz=UTC)
-        self.dedup = dataset_data["dedup"]
-        self.devices = dataset_data["devices"]
-        self.encryption = dataset_data["encryption"]
-        self.exec = dataset_data["exec"]
-        self.filesystem_limit = dataset_data["filesystem_limit"]
-        self.guid = int(dataset_data["guid"])
-        self.keystatus = dataset_data["keystatus"]
-        self.logbias = dataset_data["logbias"]
-        self.mlslabel = dataset_data["mlslabel"]
-        self.mounted = dataset_data["mounted"]
-        self.mountpoint = dataset_data["mountpoint"]
-        self.name = dataset_data["name"]
-        self.quota = int(dataset_data["quota"])
-        self.readonly = dataset_data["readonly"]
-        self.recordsize = int(dataset_data["recordsize"])
-        self.redundant_metadata = dataset_data["redundant_metadata"]
-        self.referenced = int(dataset_data["referenced"])
-        self.refquota = int(dataset_data["refquota"])
-        self.refreservation = int(dataset_data["refreservation"])
-        self.reservation = int(dataset_data["reservation"])
-        self.setuid = dataset_data["setuid"]
-        self.sharenfs = dataset_data["sharenfs"]
-        self.snapdir = dataset_data["snapdir"]
-        self.snapshot_limit = dataset_data["snapshot_limit"]
-        self.sync = dataset_data["sync"]
-        self.used = int(dataset_data["used"])
-        self.usedbychildren = int(dataset_data["usedbychildren"])
-        self.usedbydataset = int(dataset_data["usedbydataset"])
-        self.usedbysnapshots = int(dataset_data["usedbysnapshots"])
-        self.version = int(dataset_data["version"])
-        self.volmode = dataset_data["volmode"]
-        self.volsize = dataset_data["volsize"]
-        self.vscan = dataset_data["vscan"]
-        self.written = int(dataset_data["written"])
-        self.xattr = dataset_data["xattr"]
+        self.aclinherit = properties["aclinherit"]["value"]
+        self.aclmode = properties["aclmode"]["value"]
+        self.acltype = properties["acltype"]["value"]
+        self.available = int(properties["available"]["value"])
+        self.canmount = properties["canmount"]["value"]
+        self.checksum = properties["checksum"]["value"]
+        self.clones = properties["clones"]["value"]
+        self.compression = properties["compression"]["value"]
+        self.copies = int(properties["copies"]["value"])
+        self.createtxg = int(properties["createtxg"]["value"])
+        self.creation = datetime.fromtimestamp(int(properties["creation"]["value"]), tz=UTC)
+        self.dedup = properties["dedup"]["value"]
+        self.devices = properties["devices"]["value"]
+        self.encryption = properties["encryption"]["value"]
+        self.exec = properties["exec"]["value"]
+        self.filesystem_limit = properties["filesystem_limit"]["value"]
+        self.guid = int(properties["guid"]["value"])
+        self.keystatus = properties["keystatus"]["value"]
+        self.logbias = properties["logbias"]["value"]
+        self.mlslabel = properties["mlslabel"]["value"]
+        self.mounted = properties["mounted"]["value"]
+        self.mountpoint = properties["mountpoint"]["value"]
+        self.name = name
+        self.quota = int(properties["quota"]["value"])
+        self.readonly = properties["readonly"]["value"]
+        self.recordsize = int(properties["recordsize"]["value"])
+        self.redundant_metadata = properties["redundant_metadata"]["value"]
+        self.referenced = int(properties["referenced"]["value"])
+        self.refquota = int(properties["refquota"]["value"])
+        self.refreservation = int(properties["refreservation"]["value"])
+        self.reservation = int(properties["reservation"]["value"])
+        self.setuid = properties["setuid"]["value"]
+        self.sharenfs = properties["sharenfs"]["value"]
+        self.snapdir = properties["snapdir"]["value"]
+        self.snapshot_limit = properties["snapshot_limit"]["value"]
+        self.sync = properties["sync"]["value"]
+        self.used = int(properties["used"]["value"])
+        self.usedbychildren = int(properties["usedbychildren"]["value"])
+        self.usedbydataset = int(properties["usedbydataset"]["value"])
+        self.usedbysnapshots = int(properties["usedbysnapshots"]["value"])
+        self.version = int(properties["version"]["value"])
+        self.volmode = properties["volmode"]["value"]
+        self.volsize = properties["volsize"]["value"]
+        self.vscan = properties["vscan"]["value"]
+        self.written = int(properties["written"]["value"])
+        self.xattr = properties["xattr"]["value"]
 
     def get_snapshots(self) -> list[Snapshot] | None:
         """Get all snapshots from zfs and process then is test dicts of sets."""
-        options = (
-            "createtxg",
-            "creation",
-            "defer_destroy",
-            "guid",
-            "name",
-            "objsetid",
-            "ratio",
-            "refer",
-            "used",
-            "userrefs",
-            "version",
-            "written",
-        )
+        snapshots_data = _zfs_list(f"zfs list -t snapshot -pHj {self.name} -o all")
 
-        raw_snapshots, _ = bash_wrapper(f"zfs list -t snapshot -pH {self.name} -o {','.join(options)}")
-
-        if raw_snapshots == "":
-            return None
-
-        return [Snapshot(raw_snapshot, options) for raw_snapshot in raw_snapshots.strip().split("\n")]
+        return [Snapshot(properties) for properties in snapshots_data["datasets"].values()]
 
     def create_snapshot(self, snapshot_name: str) -> str:
         """Creates a zfs snapshot.
