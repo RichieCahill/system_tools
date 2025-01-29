@@ -40,7 +40,7 @@ def zpool_tests(pool_names: Sequence[str], zpool_capacity_threshold: int = 90) -
 
     upgrade_status, _ = bash_wrapper("zpool upgrade")
     if not search(r"Every feature flags pool has all supported and requested features enabled.", upgrade_status):
-        errors.append("ZPool out of date")
+        errors.append("ZPool out of date run `sudo zpool upgrade -a`")
 
     return errors
 
