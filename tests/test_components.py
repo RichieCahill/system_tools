@@ -33,7 +33,7 @@ def test_zpool_tests_out_of_date(mocker: MockerFixture) -> None:
     mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.Zpool", return_value=mock_zpool)
     mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=("", ""))
     errors = zpool_tests(("Main",))
-    assert errors == ["ZPool out of date"]
+    assert errors == ["ZPool out of date run `sudo zpool upgrade -a`"]
 
 
 def test_zpool_tests_out_of_space(mocker: MockerFixture) -> None:
