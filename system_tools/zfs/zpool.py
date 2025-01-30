@@ -1,6 +1,28 @@
 """test."""
 
+from __future__ import annotations
+
+import json
+from typing import Any
+
 from system_tools.common import bash_wrapper
+
+
+def _zpool_list(zfs_list: str) -> dict[str, Any]:
+    """Check the version of zfs."""
+    raw_zfs_list_data, _ = bash_wrapper(zfs_list)
+
+    zfs_list_data = json.loads(raw_zfs_list_data)
+
+    vers_major = zfs_list_data["output_version"]["vers_major"]
+    vers_minor = zfs_list_data["output_version"]["vers_minor"]
+    command = zfs_list_data["output_version"]["command"]
+
+    if vers_major != 0 or vers_minor != 1 or command != "zpool list":
+        error = f"Datasets are not in the correct format {vers_major=} {vers_minor=} {command=}"
+        raise RuntimeError(error)
+
+    return zfs_list_data
 
 
 class Zpool:
@@ -11,55 +33,32 @@ class Zpool:
         name: str,
     ) -> None:
         """__init__."""
-        options = (
-            "allocated",
-            "altroot",
-            "ashift",
-            "autoexpand",
-            "autoreplace",
-            "autotrim",
-            "capacity",
-            "comment",
-            "dedupratio",
-            "delegation",
-            "expandsize",
-            "failmode",
-            "fragmentation",
-            "free",
-            "freeing",
-            "guid",
-            "health",
-            "leaked",
-            "readonly",
-            "size",
-        )
+        zpool_data = _zpool_list(f"zpool list {name} -pHj -o all")
 
-        raw_pool_data, _ = bash_wrapper(f"zpool list {name} -pH -o {','.join(options)}")
-
-        pool_data = {option: raw_pool_data.strip().split("\t")[index] for index, option in enumerate(options)}
+        properties = zpool_data["pools"][name]["properties"]
 
         self.name = name
 
-        self.allocated = int(pool_data["allocated"])
-        self.altroot = pool_data["altroot"]
-        self.ashift = int(pool_data["ashift"])
-        self.autoexpand = pool_data["autoexpand"]
-        self.autoreplace = pool_data["autoreplace"]
-        self.autotrim = pool_data["autotrim"]
-        self.capacity = int(pool_data["capacity"])
-        self.comment = pool_data["comment"]
-        self.dedupratio = pool_data["dedupratio"]
-        self.delegation = pool_data["delegation"]
-        self.expandsize = pool_data["expandsize"]
-        self.failmode = pool_data["failmode"]
-        self.fragmentation = int(pool_data["fragmentation"])
-        self.free = pool_data["free"]
-        self.freeing = int(pool_data["freeing"])
-        self.guid = int(pool_data["guid"])
-        self.health = pool_data["health"]
-        self.leaked = int(pool_data["leaked"])
-        self.readonly = pool_data["readonly"]
-        self.size = int(pool_data["size"])
+        self.allocated = int(properties["allocated"]["value"])
+        self.altroot = properties["altroot"]["value"]
+        self.ashift = int(properties["ashift"]["value"])
+        self.autoexpand = properties["autoexpand"]["value"]
+        self.autoreplace = properties["autoreplace"]["value"]
+        self.autotrim = properties["autotrim"]["value"]
+        self.capacity = int(properties["capacity"]["value"])
+        self.comment = properties["comment"]["value"]
+        self.dedupratio = properties["dedupratio"]["value"]
+        self.delegation = properties["delegation"]["value"]
+        self.expandsize = properties["expandsize"]["value"]
+        self.failmode = properties["failmode"]["value"]
+        self.fragmentation = int(properties["fragmentation"]["value"])
+        self.free = properties["free"]["value"]
+        self.freeing = int(properties["freeing"]["value"])
+        self.guid = int(properties["guid"]["value"])
+        self.health = properties["health"]["value"]
+        self.leaked = int(properties["leaked"]["value"])
+        self.readonly = properties["readonly"]["value"]
+        self.size = int(properties["size"]["value"])
 
     def __repr__(self) -> str:
         """__repr__."""
