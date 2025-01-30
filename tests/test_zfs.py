@@ -7,7 +7,9 @@ from unittest.mock import call
 import pytest
 from pytest_mock import MockerFixture
 
-from system_tools.zfs.dataset import Dataset, Snapshot, _zfs_list, get_datasets
+from system_tools.zfs import Dataset, Snapshot, Zpool, get_datasets
+from system_tools.zfs.dataset import _zfs_list
+from system_tools.zfs.zpool import _zpool_list
 
 SAMPLE_SNAPSHOT_DATA = {
     "createtxg": "123",
@@ -80,11 +82,40 @@ SAMPLE_DATASET_DATA = {
     },
 }
 
+SAMPLE_ZPOOL_DATA = {
+    "output_version": {"vers_major": 0, "vers_minor": 1, "command": "zpool list"},
+    "pools": {
+        "testpool": {
+            "properties": {
+                "allocated": {"value": "1000000"},
+                "altroot": {"value": "none"},
+                "ashift": {"value": "12"},
+                "autoexpand": {"value": "off"},
+                "autoreplace": {"value": "off"},
+                "autotrim": {"value": "off"},
+                "capacity": {"value": "50"},
+                "comment": {"value": "test pool"},
+                "dedupratio": {"value": "1.00x"},
+                "delegation": {"value": "on"},
+                "expandsize": {"value": "0"},
+                "failmode": {"value": "wait"},
+                "fragmentation": {"value": "20"},
+                "free": {"value": "1000000"},
+                "freeing": {"value": "0"},
+                "guid": {"value": "12345678"},
+                "health": {"value": "ONLINE"},
+                "leaked": {"value": "0"},
+                "readonly": {"value": "off"},
+                "size": {"value": "2000000"},
+            }
+        }
+    },
+}
+
 
 def test_dataset_initialization(mocker: MockerFixture) -> None:
     """Test Dataset class initialization with mocked ZFS data."""
-    mock_zfs_list = mocker.patch("system_tools.zfs.dataset._zfs_list")
-    mock_zfs_list.return_value = SAMPLE_DATASET_DATA
+    mocker.patch("system_tools.zfs.dataset._zfs_list", return_value=SAMPLE_DATASET_DATA)
 
     dataset = Dataset("pool/dataset")
 
@@ -158,10 +189,12 @@ def test_snapshot_initialization() -> None:
 
 def test_zfs_list_version_check(mocker: MockerFixture) -> None:
     """Test version validation in _zfs_list."""
-    mock_bash = mocker.patch("system_tools.zfs.dataset.bash_wrapper")
-    mock_bash.return_value = (
-        json.dumps({"output_version": {"vers_major": 1, "vers_minor": 0, "command": "zfs list"}}),
-        0,
+    mocker.patch(
+        "system_tools.zfs.dataset.bash_wrapper",
+        return_value=(
+            json.dumps({"output_version": {"vers_major": 1, "vers_minor": 0, "command": "zfs list"}}),
+            0,
+        ),
     )
 
     with pytest.raises(RuntimeError) as excinfo:
@@ -172,8 +205,9 @@ def test_zfs_list_version_check(mocker: MockerFixture) -> None:
 
 def test_get_datasets(mocker: MockerFixture) -> None:
     """Test get_datasets."""
-    mock_bash = mocker.patch("system_tools.zfs.dataset.bash_wrapper")
-    mock_bash.return_value = ("pool/dataset\npool/other\ninvalid", 0)
+    mock_bash = mocker.patch(
+        "system_tools.zfs.dataset.bash_wrapper", return_value=("pool/dataset\npool/other\ninvalid", 0)
+    )
     mock_dataset = mocker.patch("system_tools.zfs.dataset.Dataset")
 
     get_datasets()
@@ -183,3 +217,93 @@ def test_get_datasets(mocker: MockerFixture) -> None:
     calls = [call("pool/dataset"), call("pool/other")]
 
     mock_dataset.assert_has_calls(calls)
+
+
+def test_zpool_initialization(mocker: MockerFixture) -> None:
+    """Test Zpool class initialization with mocked ZFS data."""
+    mocker.patch("system_tools.zfs.zpool._zpool_list", return_value=SAMPLE_ZPOOL_DATA)
+
+    zpool = Zpool("testpool")
+
+    assert zpool.__dict__ == {
+        "name": "testpool",
+        "allocated": 1000000,
+        "altroot": "none",
+        "ashift": 12,
+        "autoexpand": "off",
+        "autoreplace": "off",
+        "autotrim": "off",
+        "capacity": 50,
+        "comment": "test pool",
+        "dedupratio": "1.00x",
+        "delegation": "on",
+        "expandsize": "0",
+        "failmode": "wait",
+        "fragmentation": 20,
+        "free": "1000000",
+        "freeing": 0,
+        "guid": 12345678,
+        "health": "ONLINE",
+        "leaked": 0,
+        "readonly": "off",
+        "size": 2000000,
+    }
+
+
+def test_zpool_repr(mocker: MockerFixture) -> None:
+    """Test Zpool string representation."""
+    mock_zpool_list = mocker.patch("system_tools.zfs.zpool._zpool_list", return_value=SAMPLE_ZPOOL_DATA)
+
+    zpool = Zpool("testpool")
+    repr_string = repr(zpool)
+
+    expected_attrs = [
+        "name",
+        "allocated",
+        "altroot",
+        "ashift",
+        "autoexpand",
+        "autoreplace",
+        "autotrim",
+        "capacity",
+        "comment",
+        "dedupratio",
+        "delegation",
+        "expandsize",
+        "failmode",
+        "fragmentation",
+        "freeing",
+        "guid",
+        "health",
+        "leaked",
+        "readonly",
+        "size",
+    ]
+
+    for attr in expected_attrs:
+        assert f"{attr}=" in repr_string
+
+
+def test_zpool_list(mocker: MockerFixture) -> None:
+    """Test version validation in _zpool_list."""
+    mocker.patch(
+        "system_tools.zfs.zpool.bash_wrapper",
+        return_value=(json.dumps({"output_version": {"vers_major": 0, "vers_minor": 1, "command": "zpool list"}}), 0),
+    )
+
+    result = _zpool_list("zpool list invalid -pHj -o all")
+
+    assert result == {"output_version": {"command": "zpool list", "vers_major": 0, "vers_minor": 1}}
+
+
+def test_zpool_list_version_check(mocker: MockerFixture) -> None:
+    """Test version validation in _zpool_list."""
+    mocker.patch(
+        "system_tools.zfs.zpool.bash_wrapper",
+        return_value=(json.dumps({"output_version": {"vers_major": 1, "vers_minor": 0, "command": "zpool list"}}), 0),
+    )
+
+    with pytest.raises(RuntimeError) as excinfo:
+        _zpool_list("zpool list invalid -pHj -o all")
+
+    assert "Datasets are not in the correct format" in str(excinfo.value)
