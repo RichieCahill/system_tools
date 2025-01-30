@@ -252,7 +252,7 @@ def test_zpool_initialization(mocker: MockerFixture) -> None:
 
 def test_zpool_repr(mocker: MockerFixture) -> None:
     """Test Zpool string representation."""
-    mock_zpool_list = mocker.patch("system_tools.zfs.zpool._zpool_list", return_value=SAMPLE_ZPOOL_DATA)
+    mocker.patch("system_tools.zfs.zpool._zpool_list", return_value=SAMPLE_ZPOOL_DATA)
 
     zpool = Zpool("testpool")
     repr_string = repr(zpool)
