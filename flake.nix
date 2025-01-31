@@ -43,7 +43,7 @@
 
         p2nix_defaults = {
           projectDir = ./.;
-          python = pkgs.python312;
+          python = pkgs.python313;
           overrides = poetry2nix.overrides.withDefaults (
             _: prev: lib.genAttrs [
               "ruff"
@@ -67,7 +67,7 @@
           ).env.overrideAttrs
             (old: {
               buildInputs = with pkgs; [
-                (poetry.override { python3 = python312; })
+                (poetry.override { python3 = python313; })
               ];
             });
 
