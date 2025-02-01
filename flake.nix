@@ -73,7 +73,7 @@
 
         apps.default = {
           type = "app";
-          program = "${self.packages.system_tools}/bin/validate_jeeves";
+          program = "${self.packages.system_tools}/bin/validate_system";
         };
       }
     );
