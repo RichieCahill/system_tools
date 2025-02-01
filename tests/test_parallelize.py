@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from concurrent.futures import Executor
+import logging
+from concurrent.futures import Future, ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -16,52 +17,36 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 
-class MockFuture:
+class MockFuture(Future):
     """MockFuture."""
 
     def __init__(self, result: Any) -> None:  # noqa: ANN401
         """Init."""
+        super().__init__()
         self._result = result
-        self._exception: Exception | None = None
+        self._exception: BaseException | None = None
+        self.set_result(result)
 
-    def exception(self) -> Exception | None:
+    def exception(self, timeout: float | None = None) -> BaseException | None:
         """Exception."""
+        logging.debug(f"{timeout}=")
         return self._exception
 
-    def result(self) -> Any:  # noqa: ANN401
+    def result(self, timeout: float | None = None) -> Any:  # noqa: ANN401
         """Result."""
+        logging.debug(f"{timeout}=")
         return self._result
 
 
-class MockPoolExecutor(Executor):
+class MockPoolExecutor(ThreadPoolExecutor):
     """MockPoolExecutor."""
 
-    def __init__(
-        self,
-        max_workers: int | None = None,
-        thread_name_prefix: str = "",
-        initializer: Callable[..., None] | None = None,
-        initargs: tuple[Any, ...] = (),
-    ) -> None:
-        """Initializes a new ThreadPoolExecutor instance.
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+        """Initializes a new ThreadPoolExecutor instance."""
+        super().__init__(*args, **kwargs)
 
-        Args:
-            max_workers: The maximum number of threads that can be used to
-                execute the given calls.
-            thread_name_prefix: An optional name prefix to give our threads.
-            initializer: A callable used to initialize worker threads.
-            initargs: A tuple of arguments to pass to the initializer.
-        """
-        self._max_workers = max_workers
-        self._thread_name_prefix = thread_name_prefix
-        self._initializer = initializer
-        self._initargs = initargs
-
-    def submit(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> MockFuture:  # noqa: ANN401
+    def submit(self, fn: Callable[..., Any], /, *args: Any, **kwargs: Any) -> Future:  # noqa: ANN401
         """Submits a callable to be executed with the given arguments.
-
-        Schedules the callable to be executed as fn(*args, **kwargs) and returns
-        a Future instance representing the execution of the callable.
 
         Args:
             fn: The callable to execute.
@@ -72,7 +57,6 @@ class MockPoolExecutor(Executor):
             A Future instance representing the execution of the callable.
         """
         result = fn(*args, **kwargs)
-
         return MockFuture(result)
 
 
