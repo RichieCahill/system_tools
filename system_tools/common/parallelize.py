@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
-    from concurrent.futures._base import Executor
 
 R = TypeVar("R")
 
@@ -30,7 +29,7 @@ class ExecutorResults(Generic[R]):
 
 
 def _parallelize_base(
-    executor_type: type[Executor],
+    executor_type: type[ThreadPoolExecutor | ProcessPoolExecutor],
     func: Callable[..., R],
     kwargs_list: Sequence[Mapping[str, Any]],
     max_workers: int | None,
