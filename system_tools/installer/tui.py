@@ -1,3 +1,5 @@
+"""TUI module."""
+
 from __future__ import annotations
 
 import curses
@@ -18,7 +20,7 @@ def bash_wrapper(command: str) -> str:
     """
     logging.debug(f"running {command=}")
     # This is a acceptable risk
-    process = Popen(command.split(), stdout=PIPE, stderr=PIPE)  # noqa: S603
+    process = Popen(command.split(), stdout=PIPE, stderr=PIPE)
     output, _ = process.communicate()
     if process.returncode != 0:
         error = f"Failed to run command {command=} return code {process.returncode=}"
@@ -117,9 +119,9 @@ class State:
         self.reserve_size = 0
         self.show_reserve_input = False
 
-        self.selected_device_ids = set()
+        self.selected_device_ids: set[str] = set()
 
-    def get_selected_devices(self) -> tuple[str]:
+    def get_selected_devices(self) -> tuple[str, ...]:
         """Get selected devices."""
         return tuple(self.selected_device_ids)
 

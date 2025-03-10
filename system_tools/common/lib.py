@@ -30,7 +30,7 @@ def bash_wrapper(command: str) -> tuple[str, int]:
         the error output (stderr) as a string (optional), and the return code as an integer.
     """
     # This is a acceptable risk
-    process = Popen(command.split(), stdout=PIPE, stderr=PIPE)  # noqa: S603
+    process = Popen(command.split(), stdout=PIPE, stderr=PIPE)
     output, error = process.communicate()
     if error:
         logging.error(f"{error=}")
