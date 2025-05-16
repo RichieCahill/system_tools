@@ -1,42 +1,46 @@
-[tool.poetry]
+[project]
 name = "system_tools"
 version = "0.1.0"
 description = ""
-authors = ["Richie Cahill <richie@tmmworkshop.com>"]
-license = "MIT"
+authors = [{ name = "Richie Cahill", email = "richie@tmmworkshop.com" }]
+requires-python = "~=3.13.0"
 readme = "README.md"
-packages = [{ include = "system_tools" }]
+license = "MIT"
+dependencies = ["apscheduler", "polars", "requests"]
 
-[tool.poetry.dependencies]
-python = "^3.13"
-apscheduler = "*"
-polars = "*"
-requests = "*"
-
-[tool.poetry.group.dev.dependencies]
-mypy = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-mock = "*"
-pytest-xdist = "*"
-ruff = "*"
-types-requests = "*"
-
-[tool.poetry.scripts]
+[project.scripts]
 snapshot_manager = "system_tools.tools.snapshot_manager:main"
 validate_system = "system_tools.system_tests.validate_system:main"
 installer = "system_tools.installer.__main__:main"
 
+[dependency-groups]
+dev = [
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist",
+    "ruff",
+    "types-requests",
+]
+
+[tool.hatch.build.targets.sdist]
+include = ["system_tools"]
+
+[tool.hatch.build.targets.wheel]
+include = ["system_tools"]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
-lint.select = ["ALL"]
+
 target-version = "py313"
 
 line-length = 120
 
+lint.select = ["ALL"]
 lint.ignore = [
     "G004",   # (PERM) This is a performers nit
     "COM812", # (TEMP) conflicts when used with the formatter
