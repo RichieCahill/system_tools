@@ -94,14 +94,16 @@
               pyprojectOverrides
             ]
           );
-
+        inherit (pkgs.callPackages pyproject-nix.build.util { }) mkApplication;
     in
     {
       # Package a virtual environment as our main application.
       #
       # Enable no optional dependencies for production build.
-      packages.x86_64-linux.default = pythonSet.mkVirtualEnv "system-tools-env" workspace.deps.default;
-
+      packages.x86_64-linux.default = mkApplication {
+        venv = pythonSet.mkVirtualEnv "system-tools-env" workspace.deps.default;
+        package = pythonSet.system-tools;
+      };
       # This example provides two different modes of development:
       # - Impurely using uv to manage virtual environments
       # - Pure development using uv2nix to manage virtual environments
