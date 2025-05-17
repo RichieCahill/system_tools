@@ -93,6 +93,7 @@
     "usedbydataset",
     "usedbysnapshots",
     "userrefs",
+    "venv",
     "vfat",
     "volmode",
     "volsize",
