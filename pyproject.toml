@@ -6,7 +6,12 @@ authors = [{ name = "Richie Cahill", email = "richie@tmmworkshop.com" }]
 requires-python = "~=3.13.0"
 readme = "README.md"
 license = "MIT"
-dependencies = ["apscheduler", "polars", "requests"]
+dependencies = [
+    "apprise",
+    "apscheduler",
+    "polars",
+    "requests",
+]
 
 [project.scripts]
 snapshot_manager = "system_tools.tools.snapshot_manager:main"

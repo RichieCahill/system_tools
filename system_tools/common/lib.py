@@ -2,7 +2,10 @@
 
 import logging
 import sys
+from os import environ
 from subprocess import PIPE, Popen
+
+from apprise import Apprise
 
 
 def configure_logger(level: str = "INFO") -> None:
@@ -34,5 +37,26 @@ def bash_wrapper(command: str) -> tuple[str, int]:
     output, error = process.communicate()
     if error:
         logging.error(f"{error=}")
+        return error.decode(), process.returncode
 
     return output.decode(), process.returncode
+
+
+def signal_alert(body: str, title: str = "") -> None:
+    """Send a signal alert.
+
+    Args:
+        body (str): The body of the alert.
+        title (str, optional): The title of the alert. Defaults to "".
+    """
+    apprise_client = Apprise()
+
+    from_phone = environ["SIGNAL_ALERT_FROM_PHONE"]
+    to_phone = environ["SIGNAL_ALERT_TO_PHONE"]
+    if not from_phone or not to_phone:
+        logging.info("SIGNAL_ALERT_FROM_PHONE or SIGNAL_ALERT_TO_PHONE not set")
+        return
+
+    apprise_client.add(f"signal://localhost:8989/{from_phone}/{to_phone}")
+
+    apprise_client.notify(title=title, body=body)
