@@ -64,7 +64,10 @@ def get_snapshots_to_delete(
 
         logging.info(f"{snapshots_being_deleted} are being deleted")
         for snapshot in snapshots_being_deleted:
-            dataset.delete_snapshot(snapshot)
+            if error := dataset.delete_snapshot(snapshot):
+                error_message = f"{dataset.name}@{snapshot} failed to delete: {error}"
+                signal_alert(error_message)
+                logging.error(error_message)
 
 
 def get_time_stamp() -> str:

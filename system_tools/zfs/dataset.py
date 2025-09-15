@@ -131,7 +131,7 @@ class Dataset:
 
         return f"Failed to create snapshot {snapshot_name} for {self.name}"
 
-    def delete_snapshot(self, snapshot_name: str) -> None:
+    def delete_snapshot(self, snapshot_name: str) -> str | None:
         """Deletes a zfs snapshot.
 
         Args:
@@ -139,10 +139,13 @@ class Dataset:
             snapshot_name (str): a snapshot name
         """
         logging.debug(f"deleting {self.name}@{snapshot_name}")
-        _, return_code = bash_wrapper(f"zfs destroy {self.name}@{snapshot_name}")
+        msg, return_code = bash_wrapper(f"zfs destroy {self.name}@{snapshot_name}")
         if return_code != 0:
+            if msg.startswith(f"cannot destroy '{self.name}@{snapshot_name}': snapshot has dependent clones"):
+                return "snapshot has dependent clones"
             error = f"Failed to delete snapshot {snapshot_name=} for {self.name}"
             raise RuntimeError(error)
+        return None
 
     def __repr__(self) -> str:
         """__repr__."""
