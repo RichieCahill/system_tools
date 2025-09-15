@@ -105,6 +105,7 @@ def main() -> None:
             if status != "snapshot created":
                 msg = f"{dataset_name} failed to create snapshot {time_stamp}"
                 logging.error(msg)
+                signal_alert(msg)
                 continue
 
             count_lookup = config_data.get(dataset_name, default_config)
