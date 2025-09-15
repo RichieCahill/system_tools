@@ -51,8 +51,8 @@ def signal_alert(body: str, title: str = "") -> None:
     """
     apprise_client = Apprise()
 
-    from_phone = getenv["SIGNAL_ALERT_FROM_PHONE"]
-    to_phone = getenv["SIGNAL_ALERT_TO_PHONE"]
+    from_phone = getenv("SIGNAL_ALERT_FROM_PHONE")
+    to_phone = getenv("SIGNAL_ALERT_TO_PHONE")
     if not from_phone or not to_phone:
         logging.info("SIGNAL_ALERT_FROM_PHONE or SIGNAL_ALERT_TO_PHONE not set")
         return
