@@ -116,7 +116,6 @@ class Dataset:
         """Creates a zfs snapshot.
 
         Args:
-            dataset_name (str): a dataset name
             snapshot_name (str): a snapshot name
         """
         logging.debug(f"Creating {self.name}@{snapshot_name}")
@@ -135,7 +134,6 @@ class Dataset:
         """Deletes a zfs snapshot.
 
         Args:
-            dataset_name (str): a dataset name
             snapshot_name (str): a snapshot name
         """
         logging.debug(f"deleting {self.name}@{snapshot_name}")
