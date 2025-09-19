@@ -20,6 +20,43 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+def main(config_file: Path) -> None:
+    """Main."""
+    configure_logger(level="DEBUG")
+    logging.info("Starting snapshot_manager")
+
+    try:
+        config_data = load_config_data(config_file)
+        logging.debug(f"{config_data=}")
+
+        time_stamp = get_time_stamp()
+
+        default_config = config_data.get(
+            "default",
+            {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
+        )
+
+        for dataset in get_datasets():
+            dataset_name = dataset.name
+            status = dataset.create_snapshot(time_stamp)
+            logging.debug(f"{status=}")
+            if status != "snapshot created":
+                msg = f"{dataset_name} failed to create snapshot {time_stamp}"
+                logging.error(msg)
+                signal_alert(msg)
+                continue
+
+            count_lookup = config_data.get(dataset_name, default_config)
+
+            get_snapshots_to_delete(dataset, count_lookup)
+    except Exception:
+        logging.exception("snapshot_manager failed")
+        signal_alert("snapshot_manager failed")
+        sys.exit(1)
+    else:
+        logging.info("snapshot_manager completed")
+
+
 @cache
 def load_config_data(config_file: Path) -> dict[str, dict[str, int]]:
     """Load a TOML configuration file.
@@ -82,43 +119,6 @@ def get_time_stamp() -> str:
     now = datetime.now(tz=UTC)
     nearest_15_min = now.replace(minute=(now.minute - (now.minute % 15)))
     return nearest_15_min.strftime("auto_%Y%m%d%H%M")
-
-
-def main(config_file: Path) -> None:
-    """Main."""
-    configure_logger(level="DEBUG")
-    logging.info("Starting snapshot_manager")
-
-    try:
-        config_data = load_config_data(config_file)
-        logging.debug(f"{config_data=}")
-
-        time_stamp = get_time_stamp()
-
-        default_config = config_data.get(
-            "default",
-            {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
-        )
-
-        for dataset in get_datasets():
-            dataset_name = dataset.name
-            status = dataset.create_snapshot(time_stamp)
-            logging.debug(f"{status=}")
-            if status != "snapshot created":
-                msg = f"{dataset_name} failed to create snapshot {time_stamp}"
-                logging.error(msg)
-                signal_alert(msg)
-                continue
-
-            count_lookup = config_data.get(dataset_name, default_config)
-
-            get_snapshots_to_delete(dataset, count_lookup)
-    except Exception:
-        logging.exception("snapshot_manager failed")
-        signal_alert("snapshot_manager failed")
-        sys.exit(1)
-    else:
-        logging.info("snapshot_manager completed")
 
 
 if __name__ == "__main__":
