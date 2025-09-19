@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import sys
-from datetime import UTC, datetime
 from functools import cache
 from re import compile as re_compile
 from re import search
@@ -14,6 +13,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from system_tools.common import configure_logger, signal_alert
+from system_tools.common.lib import utcnow
 from system_tools.zfs import Dataset, get_datasets
 
 if TYPE_CHECKING:
@@ -135,7 +135,7 @@ def get_snapshots_to_delete(
 
 def get_time_stamp() -> str:
     """Get the time stamp."""
-    now = datetime.now(tz=UTC)
+    now = utcnow()
     nearest_15_min = now.replace(minute=(now.minute - (now.minute % 15)))
     return nearest_15_min.strftime("auto_%Y%m%d%H%M")
 
