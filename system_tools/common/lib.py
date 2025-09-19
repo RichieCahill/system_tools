@@ -1,11 +1,16 @@
 """common."""
 
+from __future__ import annotations
+
 import logging
 import sys
+from datetime import UTC, datetime
 from os import getenv
 from subprocess import PIPE, Popen
 
 from apprise import Apprise
+
+logger = logging.getLogger(__name__)
 
 
 def configure_logger(level: str = "INFO") -> None:
@@ -36,7 +41,7 @@ def bash_wrapper(command: str) -> tuple[str, int]:
     process = Popen(command.split(), stdout=PIPE, stderr=PIPE)
     output, error = process.communicate()
     if error:
-        logging.error(f"{error=}")
+        logger.error(f"{error=}")
         return error.decode(), process.returncode
 
     return output.decode(), process.returncode
@@ -54,9 +59,14 @@ def signal_alert(body: str, title: str = "") -> None:
     from_phone = getenv("SIGNAL_ALERT_FROM_PHONE")
     to_phone = getenv("SIGNAL_ALERT_TO_PHONE")
     if not from_phone or not to_phone:
-        logging.info("SIGNAL_ALERT_FROM_PHONE or SIGNAL_ALERT_TO_PHONE not set")
+        logger.info("SIGNAL_ALERT_FROM_PHONE or SIGNAL_ALERT_TO_PHONE not set")
         return
 
     apprise_client.add(f"signal://localhost:8989/{from_phone}/{to_phone}")
 
     apprise_client.notify(title=title, body=body)
+
+
+def utcnow() -> datetime:
+    """Get the current UTC time."""
+    return datetime.now(tz=UTC)
