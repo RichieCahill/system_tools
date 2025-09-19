@@ -26,35 +26,54 @@ def main(config_file: Path) -> None:
     logging.info("Starting snapshot_manager")
 
     try:
-        config_data = load_config_data(config_file)
-        logging.debug(f"{config_data=}")
-
         time_stamp = get_time_stamp()
 
-        default_config = config_data.get(
-            "default",
-            {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
-        )
-
         for dataset in get_datasets():
-            dataset_name = dataset.name
             status = dataset.create_snapshot(time_stamp)
             logging.debug(f"{status=}")
             if status != "snapshot created":
-                msg = f"{dataset_name} failed to create snapshot {time_stamp}"
+                msg = f"{dataset.name} failed to create snapshot {time_stamp}"
                 logging.error(msg)
                 signal_alert(msg)
                 continue
 
-            count_lookup = config_data.get(dataset_name, default_config)
-
-            get_snapshots_to_delete(dataset, count_lookup)
+            get_snapshots_to_delete(dataset, get_count_lookup(config_file, dataset.name))
     except Exception:
         logging.exception("snapshot_manager failed")
         signal_alert("snapshot_manager failed")
         sys.exit(1)
     else:
         logging.info("snapshot_manager completed")
+
+
+def get_count_lookup(config_file: Path, dataset_name: str) -> dict[str, int]:
+    """Get the count lookup.
+
+    Args:
+        config_file (Path): The path to the configuration file.
+        dataset_name (str): The name of the dataset.
+
+    Returns:
+        dict[str, int]: The count lookup.
+    """
+    config_data = load_config_data(config_file)
+
+    return config_data.get(dataset_name, get_default_config(config_data))
+
+
+def get_default_config(config_data: dict[str, dict[str, int]]) -> dict[str, int]:
+    """Get the default configuration.
+
+    Args:
+        config_data (dict[str, dict[str, int]]): The configuration data.
+
+    Returns:
+        dict[str, int]: The default configuration.
+    """
+    return config_data.get(
+        "default",
+        {"15_min": 4, "hourly": 12, "daily": 0, "monthly": 0},
+    )
 
 
 @cache
