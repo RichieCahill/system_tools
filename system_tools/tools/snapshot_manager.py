@@ -3,20 +3,25 @@
 from __future__ import annotations
 
 import logging
-import logging.config
 import sys
-from argparse import ArgumentParser
 from datetime import UTC, datetime
-from pathlib import Path
+from functools import cache
 from re import compile as re_compile
 from re import search
 from tomllib import load as toml_load
+from typing import TYPE_CHECKING
+
+import typer
 
 from system_tools.common import configure_logger, signal_alert
 from system_tools.zfs import Dataset, get_datasets
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-def load_config_data(config_file: str) -> dict[str, dict[str, int]]:
+
+@cache
+def load_config_data(config_file: Path) -> dict[str, dict[str, int]]:
     """Load a TOML configuration file.
 
     Args:
@@ -25,8 +30,10 @@ def load_config_data(config_file: str) -> dict[str, dict[str, int]]:
     Returns:
         dict: The configuration data.
     """
-    with Path(config_file).open("rb") as file:
-        return toml_load(file)
+    if config_file.exists():
+        with config_file.open("rb") as file:
+            return toml_load(file)
+    return {}
 
 
 def get_snapshots_to_delete(
@@ -77,18 +84,13 @@ def get_time_stamp() -> str:
     return nearest_15_min.strftime("auto_%Y%m%d%H%M")
 
 
-def main() -> None:
+def main(config_file: Path) -> None:
     """Main."""
     configure_logger(level="DEBUG")
     logging.info("Starting snapshot_manager")
 
-    parser = ArgumentParser()
-    parser.add_argument("--config-file", help="Path to the config file", default="config.toml", type=Path)
-    args = parser.parse_args()
     try:
-        config_data = {}
-        if args.config_file.exists():
-            config_data = load_config_data(args.config_file)
+        config_data = load_config_data(config_file)
         logging.debug(f"{config_data=}")
 
         time_stamp = get_time_stamp()
@@ -120,4 +122,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
