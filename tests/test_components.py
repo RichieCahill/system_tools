@@ -1,10 +1,8 @@
 """test_components."""
 
-from os import environ
-
 from pytest_mock import MockerFixture
 
-from system_tools.system_tests.components import discord_notification, systemd_tests, zpool_tests
+from system_tools.system_tests.components import systemd_tests, zpool_tests
 from system_tools.zfs import Zpool
 
 temp = "Every feature flags pool has all supported and requested features enabled.\n"
@@ -95,10 +93,3 @@ def test_systemd_tests_fail(mocker: MockerFixture) -> None:
     mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.bash_wrapper", return_value=("inactive\n", ""))
     errors = systemd_tests(("docker",), max_retries=5)
     assert errors == ["docker is inactive"]
-
-
-def test_discord_notification(mocker: MockerFixture) -> None:
-    """test_discord_notification."""
-    environ["WEBHOOK_URL"] = "https://discord.com/api/webhooks/test"
-    mocker.patch(f"{SYSTEM_TESTS_COMPONENTS}.post", return_value=None)
-    discord_notification("username", ["error1", "error2"])
