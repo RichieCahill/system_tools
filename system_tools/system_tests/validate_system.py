@@ -1,17 +1,19 @@
-"""Validate Jeeves."""
+"""Validate {server_name}."""
 
 import logging
 import sys
-from argparse import ArgumentParser
+import tomllib
 from os import environ
 from pathlib import Path
-from tomllib import load as toml_load
+
+import typer
 
 from system_tools.common import configure_logger
-from system_tools.system_tests.components import discord_notification, systemd_tests, zpool_tests
+from system_tools.common.lib import signal_alert
+from system_tools.system_tests.components import systemd_tests, zpool_tests
 
 
-def load_config_data(config_file: str) -> dict[str, list[str]]:
+def load_config_data(config_file: Path) -> dict[str, list[str]]:
     """Load a TOML configuration file.
 
     Args:
@@ -20,24 +22,15 @@ def load_config_data(config_file: str) -> dict[str, list[str]]:
     Returns:
         dict: The configuration data.
     """
-    with Path(config_file).open("rb") as file:
-        return toml_load(file)
+    return tomllib.loads(config_file.read_text())
 
 
-def main() -> None:
+def main(server_name: str, config_file: Path) -> None:
     """Main."""
     configure_logger(level=environ.get("LOG_LEVEL", "INFO"))
-    logging.info("Starting jeeves validation")
+    logging.info("Starting {server_name} validation")
 
-    parser = ArgumentParser()
-    parser.add_argument("--config-file", help="Path to the config file", default="config.toml", type=Path)
-    args = parser.parse_args()
-
-    if not args.config_file.exists():
-        error = f"Config file {args.config_file} does not exist"
-        raise FileNotFoundError(error)
-
-    config_data = load_config_data(args.config_file)
+    config_data = load_config_data(config_file)
 
     errors: list[str] = []
     try:
@@ -48,17 +41,17 @@ def main() -> None:
             errors.extend(systemd_errors)
 
     except Exception as error:
-        logging.exception("Jeeves validation failed")
-        errors.append(f"Jeeves validation failed: {error}")
+        logging.exception(f"{server_name} validation failed")
+        errors.append(f"{server_name} validation failed: {error}")
 
     if errors:
-        logging.error(f"Jeeves validation failed: \n{'\n'.join(errors)}")
-        discord_notification("jeeves", errors)
+        logging.error(f"{server_name} validation failed: \n{'\n'.join(errors)}")
+        signal_alert(f"{server_name} validation failed {errors}")
 
         sys.exit(1)
 
-    logging.info("Jeeves validation passed")
+    logging.info(f"{server_name} validation passed")
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)

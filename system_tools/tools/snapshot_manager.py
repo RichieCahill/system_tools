@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 import sys
+import tomllib
 from functools import cache
 from re import compile as re_compile
 from re import search
-from tomllib import load as toml_load
 from typing import TYPE_CHECKING
 
 import typer
@@ -87,8 +87,7 @@ def load_config_data(config_file: Path) -> dict[str, dict[str, int]]:
         dict: The configuration data.
     """
     if config_file.exists():
-        with config_file.open("rb") as file:
-            return toml_load(file)
+        return tomllib.loads(config_file.read_text())
     return {}
 
 
