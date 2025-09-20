@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from system_tools.tools.snapshot_manager import get_time_stamp, main
-from system_tools.zfs.dataset import Dataset
+from system_tools.tools.snapshot_manager import get_snapshots_to_delete, get_time_stamp, main
+from system_tools.zfs.dataset import Dataset, Snapshot
 
 if TYPE_CHECKING:
     from pyfakefs.fake_filesystem import FakeFilesystem
@@ -114,6 +114,63 @@ def test_main_exception(mocker: MockerFixture, fs: FakeFilesystem) -> None:
     mock_signal_alert.assert_called_once_with("snapshot_manager failed")
     mock_get_datasets.assert_called_once()
     mock_get_snapshots_to_delete.assert_not_called()
+
+
+def test_get_snapshots_to_delete(mocker: MockerFixture) -> None:
+    """test_get_snapshots_to_delete."""
+    mock_snapshot_0 = mocker.MagicMock(spec=Snapshot)
+    mock_snapshot_0.name = "auto_202509150415"
+    mock_snapshot_1 = mocker.MagicMock(spec=Snapshot)
+    mock_snapshot_1.name = "auto_202509150415"
+
+    mock_dataset = mocker.MagicMock(spec=Dataset)
+    mock_dataset.name = "test_dataset"
+    mock_dataset.get_snapshots.return_value = (mock_snapshot_0, mock_snapshot_1)
+    mock_dataset.delete_snapshot.return_value = None
+
+    mock_signal_alert = mocker.patch(f"{SNAPSHOT_MANAGER}.signal_alert")
+
+    get_snapshots_to_delete(mock_dataset, {"15_min": 1, "hourly": 0, "daily": 0, "monthly": 0})
+
+    mock_signal_alert.assert_not_called()
+    mock_dataset.delete_snapshot.assert_called_once_with("auto_202509150415")
+
+
+def test_get_snapshots_to_delete_no_snapshot(mocker: MockerFixture) -> None:
+    """test_get_snapshots_to_delete_no_snapshot."""
+    mock_dataset = mocker.MagicMock(spec=Dataset)
+    mock_dataset.name = "test_dataset"
+    mock_dataset.get_snapshots.return_value = ()
+    mock_dataset.delete_snapshot.return_value = None
+
+    mock_signal_alert = mocker.patch(f"{SNAPSHOT_MANAGER}.signal_alert")
+
+    get_snapshots_to_delete(mock_dataset, {"15_min": 1, "hourly": 0, "daily": 0, "monthly": 0})
+
+    mock_signal_alert.assert_not_called()
+    mock_dataset.delete_snapshot.assert_not_called()
+
+
+def test_get_snapshots_to_delete_errored(mocker: MockerFixture) -> None:
+    """test_get_snapshots_to_delete_errored."""
+    mock_snapshot_0 = mocker.MagicMock(spec=Snapshot)
+    mock_snapshot_0.name = "auto_202509150415"
+    mock_snapshot_1 = mocker.MagicMock(spec=Snapshot)
+    mock_snapshot_1.name = "auto_202509150415"
+
+    mock_dataset = mocker.MagicMock(spec=Dataset)
+    mock_dataset.name = "test_dataset"
+    mock_dataset.get_snapshots.return_value = (mock_snapshot_0, mock_snapshot_1)
+    mock_dataset.delete_snapshot.return_value = "snapshot has dependent clones"
+
+    mock_signal_alert = mocker.patch(f"{SNAPSHOT_MANAGER}.signal_alert")
+
+    get_snapshots_to_delete(mock_dataset, {"15_min": 1, "hourly": 0, "daily": 0, "monthly": 0})
+
+    mock_signal_alert.assert_called_once_with(
+        "test_dataset@auto_202509150415 failed to delete: snapshot has dependent clones"
+    )
+    mock_dataset.delete_snapshot.assert_called_once_with("auto_202509150415")
 
 
 def test_get_time_stamp(mocker: MockerFixture) -> None:
