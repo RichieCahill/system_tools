@@ -18,6 +18,14 @@ if TYPE_CHECKING:
 SNAPSHOT_MANAGER = "system_tools.tools.snapshot_manager"
 
 
+def create_mock_snapshot(mocker: MockerFixture, name: str) -> Snapshot:
+    """create_mock_snapshot."""
+    mock_snapshot = mocker.MagicMock(spec=Snapshot)
+    mock_snapshot.name = name
+
+    return mock_snapshot
+
+
 def test_main(mocker: MockerFixture, fs: FakeFilesystem) -> None:
     """Test main."""
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_time_stamp", return_value="2023-01-01T00:00:00")
@@ -118,10 +126,8 @@ def test_main_exception(mocker: MockerFixture, fs: FakeFilesystem) -> None:
 
 def test_get_snapshots_to_delete(mocker: MockerFixture) -> None:
     """test_get_snapshots_to_delete."""
-    mock_snapshot_0 = mocker.MagicMock(spec=Snapshot)
-    mock_snapshot_0.name = "auto_202509150415"
-    mock_snapshot_1 = mocker.MagicMock(spec=Snapshot)
-    mock_snapshot_1.name = "auto_202509150415"
+    mock_snapshot_0 = create_mock_snapshot(mocker, "auto_202509150415")
+    mock_snapshot_1 = create_mock_snapshot(mocker, "auto_202509150415")
 
     mock_dataset = mocker.MagicMock(spec=Dataset)
     mock_dataset.name = "test_dataset"
@@ -153,10 +159,8 @@ def test_get_snapshots_to_delete_no_snapshot(mocker: MockerFixture) -> None:
 
 def test_get_snapshots_to_delete_errored(mocker: MockerFixture) -> None:
     """test_get_snapshots_to_delete_errored."""
-    mock_snapshot_0 = mocker.MagicMock(spec=Snapshot)
-    mock_snapshot_0.name = "auto_202509150415"
-    mock_snapshot_1 = mocker.MagicMock(spec=Snapshot)
-    mock_snapshot_1.name = "auto_202509150415"
+    mock_snapshot_0 = create_mock_snapshot(mocker, "auto_202509150415")
+    mock_snapshot_1 = create_mock_snapshot(mocker, "auto_202509150415")
 
     mock_dataset = mocker.MagicMock(spec=Dataset)
     mock_dataset.name = "test_dataset"
