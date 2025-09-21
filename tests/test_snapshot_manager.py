@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from system_tools.tools.snapshot_manager import get_snapshots_to_delete, get_time_stamp, main
+from system_tools.tools.snapshot_manager import get_snapshots_to_delete, get_time_stamp, load_config_data, main
 from system_tools.zfs.dataset import Dataset, Snapshot
 
 if TYPE_CHECKING:
@@ -28,6 +28,8 @@ def create_mock_snapshot(mocker: MockerFixture, name: str) -> Snapshot:
 
 def test_main(mocker: MockerFixture, fs: FakeFilesystem) -> None:
     """Test main."""
+    load_config_data.cache_clear()
+
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_time_stamp", return_value="2023-01-01T00:00:00")
 
     mock_dataset = mocker.MagicMock(spec=Dataset)
@@ -57,6 +59,8 @@ def test_main(mocker: MockerFixture, fs: FakeFilesystem) -> None:
 # I need a fake filesystem to test this
 def test_main_no_snapshot_config(mocker: MockerFixture, fs: FakeFilesystem) -> None:  # noqa: ARG001
     """Test main."""
+    load_config_data.cache_clear()
+
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_time_stamp", return_value="2023-01-01T00:00:00")
 
     mock_dataset = mocker.MagicMock(spec=Dataset)
@@ -83,6 +87,8 @@ def test_main_no_snapshot_config(mocker: MockerFixture, fs: FakeFilesystem) -> N
 
 def test_main_create_snapshot_failure(mocker: MockerFixture, fs: FakeFilesystem) -> None:
     """Test main."""
+    load_config_data.cache_clear()
+
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_time_stamp", return_value="2023-01-01T00:00:00")
 
     mock_dataset = mocker.MagicMock(spec=Dataset)
@@ -103,6 +109,8 @@ def test_main_create_snapshot_failure(mocker: MockerFixture, fs: FakeFilesystem)
 
 def test_main_exception(mocker: MockerFixture, fs: FakeFilesystem) -> None:
     """Test main."""
+    load_config_data.cache_clear()
+
     mocker.patch(f"{SNAPSHOT_MANAGER}.get_time_stamp", return_value="2023-01-01T00:00:00")
 
     mock_dataset = mocker.MagicMock(spec=Dataset)
