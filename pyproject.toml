@@ -16,8 +16,8 @@ dependencies = [
 ]
 
 [project.scripts]
-snapshot_manager = "system_tools.tools.snapshot_manager:main"
-validate_system = "system_tools.system_tests.validate_system:main"
+snapshot_manager = "system_tools.tools.snapshot_manager:cli"
+validate_system = "system_tools.system_tests.validate_system:cli"
 installer = "system_tools.installer.__main__:main"
 
 [dependency-groups]

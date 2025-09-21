@@ -53,5 +53,10 @@ def main(server_name: str, config_file: Path) -> None:
     logging.info(f"{server_name} validation passed")
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """CLI."""
     typer.run(main)
+
+
+if __name__ == "__main__":
+    cli()

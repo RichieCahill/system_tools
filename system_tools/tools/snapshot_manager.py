@@ -139,5 +139,10 @@ def get_time_stamp() -> str:
     return nearest_15_min.strftime("auto_%Y%m%d%H%M")
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """CLI."""
     typer.run(main)
+
+
+if __name__ == "__main__":
+    cli()
