@@ -5,6 +5,7 @@ import sys
 import tomllib
 from os import environ
 from pathlib import Path
+from socket import gethostname
 
 import typer
 
@@ -25,10 +26,12 @@ def load_config_data(config_file: Path) -> dict[str, list[str]]:
     return tomllib.loads(config_file.read_text())
 
 
-def main(server_name: str, config_file: Path) -> None:
+def main(config_file: Path) -> None:
     """Main."""
     configure_logger(level=environ.get("LOG_LEVEL", "INFO"))
-    logging.info("Starting {server_name} validation")
+
+    server_name = gethostname()
+    logging.info(f"Starting {server_name} validation")
 
     config_data = load_config_data(config_file)
 

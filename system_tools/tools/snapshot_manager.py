@@ -86,9 +86,7 @@ def load_config_data(config_file: Path) -> dict[str, dict[str, int]]:
     Returns:
         dict: The configuration data.
     """
-    if config_file.exists():
-        return tomllib.loads(config_file.read_text())
-    return {}
+    return tomllib.loads(config_file.read_text())
 
 
 def get_snapshots_to_delete(
