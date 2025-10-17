@@ -37,6 +37,7 @@
     "filebrowser",
     "fmask",
     "getch",
+    "gethostname",
     "getmaxyx",
     "githubpulls",
     "HJVTW",
