@@ -26,7 +26,7 @@ def test_validate_system(mocker: MockerFixture, fs: FakeFilesystem) -> None:
 
     mocker.patch(f"{VALIDATE_SYSTEM}.systemd_tests", return_value=None)
     mocker.patch(f"{VALIDATE_SYSTEM}.zpool_tests", return_value=None)
-    main("foo", Path("/mock_snapshot_config.toml"))
+    main(Path("/mock_snapshot_config.toml"))
 
 
 def test_validate_system_errors(mocker: MockerFixture, fs: FakeFilesystem) -> None:
@@ -40,7 +40,7 @@ def test_validate_system_errors(mocker: MockerFixture, fs: FakeFilesystem) -> No
     mocker.patch(f"{VALIDATE_SYSTEM}.zpool_tests", return_value=["zpool_tests error"])
 
     with pytest.raises(SystemExit) as exception_info:
-        main("foo", Path("/mock_snapshot_config.toml"))
+        main(Path("/mock_snapshot_config.toml"))
 
     assert exception_info.value.code == 1
 
@@ -55,6 +55,6 @@ def test_validate_system_execution(mocker: MockerFixture, fs: FakeFilesystem) ->
     mocker.patch(f"{VALIDATE_SYSTEM}.zpool_tests", side_effect=RuntimeError("zpool_tests error"))
 
     with pytest.raises(SystemExit) as exception_info:
-        main("foo", Path("/mock_snapshot_config.toml"))
+        main(Path("/mock_snapshot_config.toml"))
 
     assert exception_info.value.code == 1
