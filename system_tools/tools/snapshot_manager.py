@@ -6,18 +6,15 @@ import logging
 import sys
 import tomllib
 from functools import cache
+from pathlib import Path  # noqa: TC003 This is required for the typer CLI
 from re import compile as re_compile
 from re import search
-from typing import TYPE_CHECKING
 
 import typer
 
 from system_tools.common import configure_logger, signal_alert
 from system_tools.common.lib import utcnow
 from system_tools.zfs import Dataset, get_datasets
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def main(config_file: Path) -> None:
